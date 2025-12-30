@@ -4,7 +4,7 @@
 
 void manejador (int sig)
 {
-    printf("Recibida senial %d\n", sig);
+    printf("\nRecibida senial %d\n", sig);
 }
 
 int main()
