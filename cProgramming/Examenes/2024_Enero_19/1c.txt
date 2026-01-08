@@ -1,0 +1,25 @@
+Apartado c) – Añadir un tercer proceso hijo que cuente el número de palabras
+
+Cambios principales en el código:
+1) Nuevo hijo:
+   - Se crea un tercer proceso hijo (fork) para contar palabras.
+   - Ese hijo leerá el documento a través de un pipe (igual que los otros).
+
+2) ¿Variaría el número de pipes?
+   - Sí. Como el padre es quien “reparte” el contenido del fichero a los hijos, y cada hijo necesita su propia entrada (su propio STDIN),
+     lo más sencillo es crear un tercer pipe (por ejemplo, to_wc[2]) desde el padre al nuevo hijo.
+   - El padre debe escribir cada bloque/línea del documento en los 3 pipes (to_grep, to_upper y to_wc), actuando como un “tee”.
+
+   Nota: Podrían hacerse diseños alternativos (un único pipe y un proceso “duplicador” intermedio, o usar ficheros temporales), pero la
+   solución más directa es: 3 hijos => 3 pipes de padre a hijo.
+
+3) Cierres de descriptores:
+   - Padre: cierra los extremos de lectura de los 3 pipes (solo escribe).
+   - Cada hijo: cierra todo lo que no usa y deja únicamente su extremo de lectura del pipe correspondiente (y en su caso, su salida/fichero).
+
+4) ¿En qué orden saldrían los mensajes por pantalla?
+   - El orden NO está garantizado.
+   - El hijo de “grep -c” y el nuevo hijo de “contar palabras” escriben ambos a la salida estándar. Como son procesos distintos y se ejecutan
+     en paralelo, sus impresiones pueden aparecer en cualquier orden (e incluso intercaladas si imprimen varias líneas).
+   - Si se necesitara un orden fijo, habría que sincronizar (por ejemplo: que el padre espere a uno antes de lanzar el otro, o que cada hijo
+     escriba a un pipe y el padre imprima ordenadamente).
